@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${challenge.title + ' - StreakMate'}">Challenge - StreakMate</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+          rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+</head>
+
+<body class="app-page">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="app-main">
+
+    <div class="container-xl px-4 py-5">
+
+        <!-- Messages -->
+
+        <div th:if="${successMessage}"
+             class="sm-alert sm-alert-success mb-4">
+
+            <i class="bi bi-check-circle me-2"></i>
+
+            <span th:text="${successMessage}"></span>
+
+        </div>
+
+        <div th:if="${errorMessage}"
+             class="sm-alert sm-alert-error mb-4">
+
+            <i class="bi bi-exclamation-circle me-2"></i>
+
+            <span th:text="${errorMessage}"></span>
+
+        </div>
+
+
+        <!-- Challenge information -->
+
+        <div class="challenge-detail-header mb-5">
+
+            <div class="d-flex flex-wrap align-items-start gap-4">
+
+                <div class="flex-grow-1">
+
+                    <a th:href="@{/dashboard}"
+                       class="back-link mb-3 d-inline-block">
+
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Back to dashboard
+
+                    </a>
+
+                    <h1 class="challenge-detail-title"
+                        th:text="${challenge.title}">
+                        Challenge title
+                    </h1>
+
+                    <p class="challenge-detail-desc"
+                       th:if="${challenge.description}"
+                       th:text="${challenge.description}">
+                        Challenge description
+                    </p>
+
+
+                    <div class="challenge-meta-row">
+
+                        <span>
+                            <i class="bi bi-calendar-event me-1"></i>
+
+                            <span th:text="${#temporals.format(challenge.startDate, 'MMM d')}">
+                                Start
+                            </span>
+
+                            -
+
+                            <span th:text="${#temporals.format(challenge.endDate, 'MMM d, yyyy')}">
+                                End
+                            </span>
+                        </span>
+
+
+                        <span>
+                            <i class="bi bi-clock me-1"></i>
+
+                            <span th:text="${challenge.totalDays}">
+                                30
+                            </span>
+
+                            days
+                        </span>
+
+
+                        <span>
+                            <i class="bi bi-people me-1"></i>
+
+                            <span th:text="${challenge.participants.size()}">
+                                0
+                            </span>
+
+                            participants
+                        </span>
+
+
+                        <span th:if="${challenge.creator != null}">
+
+                            <i class="bi bi-person me-1"></i>
+
+                            Created by @<span th:text="${challenge.creator.username}">
+                                user
+                            </span>
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Participant check-in -->
+
+                <div class="checkin-panel"
+                     th:if="${isParticipant}">
+
+                    <div th:if="${hasCheckedInToday}"
+                         class="checkin-done">
+
+                        <div class="checkin-done-title">
+                            Checked in today
+                        </div>
+
+                        <div class="checkin-done-sub">
+                            Come back tomorrow to continue your streak.
+                        </div>
+
+                    </div>
+
+
+                    <div th:unless="${hasCheckedInToday}">
+
+                        <h3 class="checkin-panel-title">
+                            Today's check-in
+                        </h3>
+
+                        <form
+                                th:action="@{/challenges/{id}/checkin(id=${challenge.id})}"
+                                method="post">
+
+                            <div class="sm-form-group mb-3">
+
+                                <input
+                                        type="text"
+                                        name="note"
+                                        class="sm-input"
+                                        placeholder="What did you do today? (optional)"
+                                        maxlength="300">
+
+                            </div>
+
+                            <button
+                                    type="submit"
+                                    class="sm-btn-primary w-100">
+
+                                Mark as complete
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+
+                    <!-- My statistics -->
+
+                    <div
+                            class="my-stats-row mt-3"
+                            th:if="${currentStreak != null}">
+
+                        <div class="my-stat">
+
+                            <span
+                                    class="my-stat-val"
+                                    th:text="${currentStreak}">
+                                0
+                            </span>
+
+                            <span class="my-stat-label">
+                                current streak
+                            </span>
+
+                        </div>
+
+
+                        <div class="my-stat">
+
+                            <span
+                                    class="my-stat-val"
+                                    th:text="${#numbers.formatDecimal(completionPct, 1, 0) + '%'}">
+                                0%
+                            </span>
+
+                            <span class="my-stat-label">
+                                completion
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Join challenge -->
+
+                <div
+                        th:unless="${isParticipant}"
+                        class="checkin-panel text-center">
+
+                    <div class="join-challenge-box">
+
+                        <p class="mt-0 mb-3">
+                            You haven't joined this challenge yet.
+                        </p>
+
+                        <form
+                                th:action="@{/challenges/join}"
+                                method="post">
+
+                            <input
+                                    type="hidden"
+                                    name="code"
+                                    th:value="${challenge.challengeCode}">
+
+                            <button
+                                    type="submit"
+                                    class="sm-btn-primary w-100">
+
+                                Join challenge
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Leaderboard -->
+
+        <div class="section-header mb-3">
+
+            <h2 class="section-title">
+                Leaderboard
+            </h2>
+
+        </div>
+
+
+        <div
+                th:if="${leaderboard.isEmpty()}"
+                class="empty-state mb-5">
+
+            <h3>
+                No participants yet
+            </h3>
+
+            <p>
+                Share the challenge code
+                <strong th:text="${challenge.challengeCode}">
+                    CODE
+                </strong>
+                with your friends.
+            </p>
+
+        </div>
+
+
+        <div
+                class="leaderboard-table-wrap mb-5"
+                th:unless="${leaderboard.isEmpty()}">
+
+            <table class="sm-table">
+
+                <thead>
+
+                <tr>
+
+                    <th>Rank</th>
+                    <th>User</th>
+                    <th>Current streak</th>
+                    <th>Longest streak</th>
+                    <th>Check-ins</th>
+                    <th>Completion</th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                <tr
+                        th:each="entry : ${leaderboard}"
+                        th:classappend="${entry.rank == 1}
+                            ? 'lb-rank-1'
+                            : (${entry.rank == 2}
+                                ? 'lb-rank-2'
+                                : (${entry.rank == 3}
+                                    ? 'lb-rank-3'
+                                    : ''))">
+
+                    <td>
+
+                        <span
+                                class="rank-badge"
+                                th:text="${entry.rank == 1}
+                                    ? '1'
+                                    : (${entry.rank == 2}
+                                        ? '2'
+                                        : (${entry.rank == 3}
+                                            ? '3'
+                                            : '#' + entry.rank))">
+
+                            1
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="lb-user">
+
+                            <div
+                                    class="lb-avatar"
+                                    th:text="${entry.username.substring(0,1).toUpperCase()}">
+                                A
+                            </div>
+
+                            <div>
+
+                                <div
+                                        class="lb-name"
+                                        th:text="${entry.name}">
+                                    Name
+                                </div>
+
+                                <div class="lb-username">
+
+                                    @<span th:text="${entry.username}">
+                                        user
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                                class="streak-chip"
+                                th:text="${entry.currentStreak + ' days'}">
+                            0 days
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                                class="text-muted"
+                                th:text="${entry.longestStreak + ' days'}">
+                            0 days
+                        </span>
+
+                    </td>
+
+
+                    <td th:text="${entry.totalCheckIns}">
+                        0
+                    </td>
+
+
+                    <td>
+
+                        <div class="lb-progress">
+
+                            <div
+                                    class="progress sm-progress"
+                                    style="height: 6px;">
+
+                                <div
+                                        class="progress-bar"
+                                        th:style="'width:' + ${entry.completionPercentage} + '%'">
+                                </div>
+
+                            </div>
+
+                            <span
+                                    th:text="${#numbers.formatDecimal(entry.completionPercentage, 1, 0)} + '%'">
+                                0%
+                            </span>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Share challenge code -->
+
+        <div class="share-code-banner">
+
+            <div>
+
+                <h3>
+                    Invite others
+                </h3>
+
+                <p>
+                    Share this code so others can join the challenge.
+                </p>
+
+            </div>
+
+
+            <div
+                    class="share-code-value"
+                    th:text="${challenge.challengeCode}"
+                    id="shareCode">
+                CODE
+            </div>
+
+
+            <button
+                    type="button"
+                    class="sm-btn-ghost"
+                    id="copyCodeButton"
+                    onclick="copyCode()">
+
+                <i class="bi bi-clipboard me-1"></i>
+                Copy code
+
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<script>
+
+    function copyCode() {
+
+        const codeElement = document.getElementById('shareCode');
+        const button = document.getElementById('copyCodeButton');
+
+        if (!codeElement || !button) {
+            return;
+        }
+
+        const code = codeElement.textContent.trim();
+
+        navigator.clipboard.writeText(code)
+            .then(function () {
+
+                button.innerHTML =
+                    '<i class="bi bi-check me-1"></i> Copied';
+
+                setTimeout(function () {
+
+                    button.innerHTML =
+                        '<i class="bi bi-clipboard me-1"></i> Copy code';
+
+                }, 2000);
+
+            })
+            .catch(function () {
+
+                alert('Could not copy the challenge code.');
+
+            });
+    }
+
+</script>
+
+</body>
+</html>
