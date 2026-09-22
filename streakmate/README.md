@@ -6,13 +6,7 @@ StreakMate is a social accountability platform where users create learning or ha
 
 ---
 
-## 📸 Screenshots
 
-| Landing Page | Dashboard | Challenge Detail |
-|---|---|---|
-| *(see /screenshots)* | *(see /screenshots)* | *(see /screenshots)* |
-
----
 
 ## ✨ Features
 
