@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -19,13 +20,14 @@ import static org.mockito.Mockito.*;
 @DisplayName("UserService – registration logic")
 class UserServiceTest {
 
-    @Mock  UserRepository userRepository;
+    @Mock UserRepository userRepository;
+    @Mock PasswordEncoder passwordEncoder;
     @InjectMocks UserService userService;
 
     @Test
     @DisplayName("Registers a new user successfully")
     void register_success() {
-        UserRegistrationDto dto = new UserRegistrationDto("Alice", "alice@test.com", "alice_j");
+        UserRegistrationDto dto = new UserRegistrationDto("Alice", "alice@test.com", "alice_j", "password123");
         when(userRepository.existsByEmail("alice@test.com")).thenReturn(false);
         when(userRepository.existsByUsername("alice_j")).thenReturn(false);
 
@@ -40,7 +42,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Throws on duplicate email")
     void register_duplicateEmail_throws() {
-        UserRegistrationDto dto = new UserRegistrationDto("Bob", "taken@test.com", "bob");
+        UserRegistrationDto dto = new UserRegistrationDto("Bob", "taken@test.com", "bob", "password123");
         when(userRepository.existsByEmail("taken@test.com")).thenReturn(true);
         assertThatThrownBy(() -> userService.register(dto))
                 .isInstanceOf(DuplicateResourceException.class)
@@ -50,7 +52,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Throws on duplicate username")
     void register_duplicateUsername_throws() {
-        UserRegistrationDto dto = new UserRegistrationDto("Bob", "bob@test.com", "taken");
+        UserRegistrationDto dto = new UserRegistrationDto("Bob", "bob@test.com", "taken", "password123");
         when(userRepository.existsByEmail("bob@test.com")).thenReturn(false);
         when(userRepository.existsByUsername("taken")).thenReturn(true);
         assertThatThrownBy(() -> userService.register(dto))

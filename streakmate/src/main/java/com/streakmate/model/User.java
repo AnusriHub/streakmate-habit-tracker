@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -13,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class User {
 
     @Id
@@ -34,6 +36,10 @@ public class User {
     @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
     @Column(nullable = false, unique = true, length = 30)
     private String username;
+
+    @JsonIgnore
+    @Column(length = 100)
+    private String password;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
