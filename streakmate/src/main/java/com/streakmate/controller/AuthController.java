@@ -62,16 +62,6 @@ public class AuthController {
         try {
             User user = userService.register(dto);
 
-            session.setAttribute(
-                    SessionConfig.SESSION_USER_ID,
-                    user.getId()
-            );
-
-            session.setAttribute(
-                    SessionConfig.SESSION_USERNAME,
-                    user.getUsername()
-            );
-
             emailService.sendWelcomeEmail(
                     user.getEmail(),
                     user.getUsername()
@@ -79,10 +69,10 @@ public class AuthController {
 
             redirectAttributes.addFlashAttribute(
                     "successMessage",
-                    "Welcome to StreakMate, " + user.getName() + "!"
+                    "Account created! Please sign in."
             );
 
-            return "redirect:/dashboard";
+            return "redirect:/login";
 
         } catch (DuplicateResourceException e) {
 
@@ -102,51 +92,6 @@ public class AuthController {
         return "auth/login";
     }
 
-    @PostMapping("/login")
-    public String login(
-            @RequestParam String identifier,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
 
-        String value = identifier.trim().toLowerCase();
 
-        try {
-            User user;
-
-            if (value.contains("@")) {
-                user = userService.findByEmail(value);
-            } else {
-                user = userService.findByUsername(value);
-            }
-
-            session.setAttribute(
-                    SessionConfig.SESSION_USER_ID,
-                    user.getId()
-            );
-
-            session.setAttribute(
-                    SessionConfig.SESSION_USERNAME,
-                    user.getUsername()
-            );
-
-            return "redirect:/dashboard";
-
-        } catch (Exception e) {
-
-            redirectAttributes.addFlashAttribute(
-                    "errorMessage",
-                    "No account found. Please register first."
-            );
-
-            return "redirect:/login";
-        }
-    }
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-
-        session.invalidate();
-
-        return "redirect:/";
-    }
 }

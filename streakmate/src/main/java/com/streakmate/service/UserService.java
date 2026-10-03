@@ -77,6 +77,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +85,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User register(UserRegistrationDto dto) {
@@ -107,6 +109,7 @@ public class UserService {
                 .name(dto.getName().trim())
                 .email(email)
                 .username(username)
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .build();
 
         User saved = userRepository.save(user);

@@ -26,13 +26,17 @@ public class ApiController {
     private final ChallengeService challengeService;
     private final StreakService streakService;
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.findAll());
-    }
+    // NOTE: the old GET /users (list of every user) was removed on purpose.
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id) {
+    public ResponseEntity<User> getUser(
+            @PathVariable Long id,
+            HttpSession session) {
+
+        if (!isSelf(id, session)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         return ResponseEntity.ok(userService.findById(id));
     }
 
@@ -61,7 +65,12 @@ public class ApiController {
 
     @GetMapping("/users/{id}/activity")
     public ResponseEntity<List<DailyCheckIn>> getActivity(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpSession session) {
+
+        if (!isSelf(id, session)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         return ResponseEntity.ok(
                 challengeService.getRecentActivity(id)
@@ -70,7 +79,12 @@ public class ApiController {
 
     @GetMapping("/users/{id}/streak")
     public ResponseEntity<Map<String, Integer>> getStreak(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            HttpSession session) {
+
+        if (!isSelf(id, session)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         int currentStreak =
                 streakService.calculateGlobalCurrentStreak(id);
@@ -102,5 +116,13 @@ public class ApiController {
         User user = userService.findById(userId);
 
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * True only when the id in the URL belongs to the logged-in user.
+     * This is what stops user 5 from reading user 6's data.
+     */
+    private boolean isSelf(Long id, HttpSession session) {
+        return id.equals(session.getAttribute(SessionConfig.SESSION_USER_ID));
     }
 }
